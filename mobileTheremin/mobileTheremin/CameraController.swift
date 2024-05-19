@@ -14,12 +14,13 @@ import SwiftUI
 class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     // MARK: - Properties
-    
+    var volume: Float = 0.0
     var session = AVCaptureSession()
     private var videoOutput = AVCaptureVideoDataOutput()
     private var depthOutput = AVCaptureDepthDataOutput()
     private let distanceLabel = UILabel()
-    @Published var closestObjectDistance: String = ""
+//    @Published var closestObjectDistance: String = ""
+    @Published var closestObjectDistance: Float = 0.0
     
     // MARK: - View Lifecycle
     
@@ -89,7 +90,7 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
     // MARK: - AVCaptureDepthDataOutputDelegate
     
     func depthDataOutput(_ output: AVCaptureDepthDataOutput, didOutput depthData: AVDepthData, timestamp: CMTime, connection: AVCaptureConnection) {
-        print("Depth data received.")
+//        print("Depth data received.")
         
         // Retrieve depth data map
         let depthPixelBuffer = depthData.depthDataMap
@@ -104,6 +105,8 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
             let baseAddress = CVPixelBufferGetBaseAddress(depthPixelBuffer)
             let bytesPerRow = CVPixelBufferGetBytesPerRow(depthPixelBuffer)
             
+            var averageDepth: Float = 0.0 // Declare as variable
+            
             // Assuming depth data format is Float32
             let bufferPointer = baseAddress?.assumingMemoryBound(to: Float32.self)
             
@@ -112,23 +115,35 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
                 var totalDepth: Float = 0.0
                 var pixelCount = 0
                 
+//                print("start")
                 for y in 0..<height {
                     for x in 0..<width {
                         let depthValue = bufferPointer[y * bytesPerRow / MemoryLayout<Float32>.stride + x]
-                        totalDepth += depthValue
-                        pixelCount += 1
+                        if depthValue <= 6000 && depthValue >= 250 {
+//                            print("\(x),\(y),\(depthValue)")
+                            totalDepth += depthValue
+                            pixelCount += 1
+                        }
                     }
                 }
+//                print("end")
                 
                 // Compute average depth
-                let averageDepth = totalDepth / Float(pixelCount)
-                
-                // Convert average depth to centimeters
-                let averageDistanceInMeters = averageDepth * 100 // Assuming depth is in meters
+                // ignore if not enough pixels in the correct range
+                if pixelCount < 20000 {
+                    averageDepth = -1
+                } else {
+                    // Compute average depth
+                    averageDepth = totalDepth / Float(pixelCount)
+                    averageDepth = max(min(3600, averageDepth), 600)
+//                    self.volume = ((3600 - averageDepth) / 300)
+                    self.volume = 1 - ((averageDepth - 600)/3000)
+                }
                 
                 // Update closestObjectDistance property with average distance
                 DispatchQueue.main.async {
-                    self.closestObjectDistance = String(format: "Average Object Distance: %.2f cm", averageDistanceInMeters)
+//                    self.closestObjectDistance = String(format: "Volume: %.2f", self.volume)
+                    self.closestObjectDistance = self.volume
                 }
             } else {
                 print("Failed to access depth data buffer.")

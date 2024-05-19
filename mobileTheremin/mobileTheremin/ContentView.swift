@@ -7,56 +7,104 @@
 
 import SwiftUI
 import AVFoundation
+import WatchConnectivity
 
-struct CameraView: UIViewRepresentable {
-    var cameraController: CameraController
+//struct PlayFrequencyView: View {
+//    @State private var frequency: Double = 440.0 // Default frequency
+//    let player = SoundControl()
+//    
+//    @State private var isPlaying = false
+//    
+//    var body: some View {
+//        VStack {
+//            Text("Frequency: \(Int(frequency)) Hz")
+//            
+//            Slider(value: $frequency, in: 20...5000, step: 1)
+//            .padding()
+//            .onChange(of: frequency) {
+//                if isPlaying { // Stop current sound
+//                    player.play(frequency: Float(frequency)) // Play with new frequency
+//                }
+//            }
+//            
+//            Button(action: {
+//                if !isPlaying {
+//                    player.play(frequency: Float(frequency))
+//                    isPlaying = true
+//                } else {
+//                    player.stop()
+//                    isPlaying = false
+//                }
+//            }) {
+//                Text(!isPlaying ? "Play Frequency" : "Stop")
+//            }
+//            .padding()
+//            
+//        }
+//    }
+//}
+
+struct GetFrequencyView: View {
+    @StateObject var watchConnector = WatchConnector()
+    @State private var frequency: Double?
     
-    func makeUIView(context: Context) -> UIView {
-        let cameraView = UIView()
-        let previewLayer = AVCaptureVideoPreviewLayer(session: cameraController.session)
-        cameraView.layer.addSublayer(previewLayer)
-        previewLayer.frame = cameraView.bounds // Set previewLayer's frame to match cameraView's bounds
-        cameraController.session.startRunning() // Start the camera session
-        return cameraView
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        // Update the view if needed
-        let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer
-        previewLayer?.frame = uiView.bounds
-    }
-}
-
-struct DepthStreamerView: View {
-    @StateObject var cameraController = CameraController()
-    @State private var isCameraSetup = false
-
     var body: some View {
         VStack {
-            Text(cameraController.closestObjectDistance)
-                .padding()
-                .foregroundColor(.white)
-                .font(.title)
-        }
-        .background(Color.black)
-        .edgesIgnoringSafeArea(.all)
-        .onAppear {
-            if !isCameraSetup && !cameraController.session.isRunning {
-                cameraController.setupCamera() // Start capturing depth data
-                isCameraSetup = true
-                print("Depth streamer view appeared.")
+            Image(systemName: "globe")
+                .imageScale(.large)
+                .foregroundColor(.accentColor)
+            
+            if let frequency = frequency {
+                Text("Frequency: \(frequency)")
+                    .foregroundColor(.green)
+                    .padding()
+            } else {
+                Text("No Frequency Received")
+                    .foregroundColor(.red)
+                    .padding()
             }
         }
-        .onDisappear {
-            print("Depth streamer view disappeared.")
+        .onReceive(watchConnector.$receivedMessage) { message in
+            if let frequency = message?["frequency"] as? Double {
+                self.frequency = frequency
+            }
         }
     }
 }
+
+//struct DepthStreamerView: View {
+//    @StateObject var cameraController = CameraController()
+//    @State private var isCameraSetup = false
+//
+//    var body: some View {
+//        VStack {
+//            Text(cameraController.closestObjectDistance)
+//                .padding()
+//                .foregroundColor(.white)
+//                .font(.title)
+//        }
+//        .background(Color.black)
+//        .edgesIgnoringSafeArea(.all)
+//        .onAppear {
+//            if !isCameraSetup && !cameraController.session.isRunning {
+//                cameraController.setupCamera() // Start capturing depth data
+//                isCameraSetup = true
+//                print("Depth streamer view appeared.")
+//            }
+//        }
+//        .onDisappear {
+//            print("Depth streamer view disappeared.")
+//        }
+//    }
+//}
 
 struct ContentView: View {
     var body: some View {
         TabView {
-            DepthStreamerView()
+//            DepthStreamerView()
+//            GetFrequencyView()
+//            PlayFrequencyView()
+//            CompleteView()
         }
         .edgesIgnoringSafeArea(.top)
     }

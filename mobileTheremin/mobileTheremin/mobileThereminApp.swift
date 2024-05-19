@@ -11,7 +11,7 @@ import SwiftUI
 struct mobileThereminApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            DynamicOscillatorView()
         }
         
     }
