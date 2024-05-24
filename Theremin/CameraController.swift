@@ -1,8 +1,8 @@
 //
 //  CameraController.swift
-//  mobileTheremin
+//  Theremin
 //
-//  Created by Elena Hertel on 4/26/24.
+//  Created by Elena Hertel on 5/21/24.
 //
 
 import UIKit
@@ -104,6 +104,8 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
             let height = CVPixelBufferGetHeight(depthPixelBuffer)
             let baseAddress = CVPixelBufferGetBaseAddress(depthPixelBuffer)
             let bytesPerRow = CVPixelBufferGetBytesPerRow(depthPixelBuffer)
+            print("height: \(height)")
+            print("width: \(width)")
             
             var averageDepth: Float = 0.0 // Declare as variable
             
@@ -114,7 +116,7 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
             if let bufferPointer = bufferPointer {
                 var totalDepth: Float = 0.0
                 var pixelCount = 0
-                
+                let currTime = Date()
 //                print("start")
                 for y in 0..<height {
                     for x in 0..<width {
@@ -139,7 +141,7 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
 //                    self.volume = ((3600 - averageDepth) / 300)
                     self.volume = 1 - ((averageDepth - 600)/3000)
                 }
-                
+//                print("True Depth Latency: \(Date().timeIntervalSince(currTime))")
                 // Update closestObjectDistance property with average distance
                 DispatchQueue.main.async {
 //                    self.closestObjectDistance = String(format: "Volume: %.2f", self.volume)
@@ -153,3 +155,4 @@ class CameraController: NSObject, ObservableObject, AVCaptureDepthDataOutputDele
         }
     }
 }
+

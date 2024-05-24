@@ -1,8 +1,8 @@
 //
 //  WatchConnector.swift
-//  mobileTheremin
+//  Theremin
 //
-//  Created by Elena Hertel on 5/10/24.
+//  Created by Elena Hertel on 5/21/24.
 //
 
 import Foundation

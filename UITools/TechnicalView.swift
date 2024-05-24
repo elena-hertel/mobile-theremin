@@ -1,8 +1,8 @@
 //
-//  SoundControl.swift
-//  Testing
+//  TechnicalView.swift
+//  Theremin
 //
-//  Created by Alicia Chun on 5/15/24.
+//  Created by Elena Hertel on 5/21/24.
 //
 
 import AudioKit
@@ -10,8 +10,49 @@ import AudioKitUI
 import SoundpipeAudioKit
 import SwiftUI
 import Tonic
+import Controls
 
-class DynamicOscillatorConductor: ObservableObject, HasAudioEngine {
+public struct ModularFrequencyView: View {
+    @Binding var frequency: Double
+    
+    public var body: some View {
+        VStack(alignment: .center) {
+            VStack {
+                Text("Frequency [Hz]")
+                    .minimumScaleFactor(0.2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                Text(String(format: "%0.2f", frequency)).lineLimit(1)
+            }
+            .frame(height: 50)
+            // Use ArcKnob to represent frequency visually
+            ArcKnob("", value: Binding<Float>(
+                get: { Float(frequency) },
+                set: { frequency = Double($0) }
+            ), range: 30...1250)
+        }
+    }
+}
+
+public struct LinearAmplitudeView: View {
+    @Binding var volume: Float
+    
+    public var body: some View {
+        VStack(alignment: .center) {
+            VStack {
+                Text("Amplitude")
+                    .minimumScaleFactor(0.2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                Text(String(format: "%0.2f", volume)).lineLimit(1)
+            }
+            .frame(height: 50)
+            ModWheel(value: $volume)
+        }
+    }
+}
+
+class TechnicalConductor: ObservableObject, HasAudioEngine {
     let engine = AudioEngine()
     var osc = DynamicOscillator()
     
@@ -38,8 +79,8 @@ class DynamicOscillatorConductor: ObservableObject, HasAudioEngine {
     }
 }
 
-struct DynamicOscillatorView: View {
-    @StateObject var conductor = DynamicOscillatorConductor()
+struct TechnicalView: View {
+    @StateObject var conductor = TechnicalConductor()
     
     @StateObject var cameraController = CameraController()
     @State private var isCameraSetup = false
@@ -63,8 +104,8 @@ struct DynamicOscillatorView: View {
                     conductor.isPlaying.toggle()
                 }
             HStack {
-                FrequencyView(frequency: $frequency)
-                AmplitudeView(volume: $volume)
+                ModularFrequencyView(frequency: $frequency)
+                LinearAmplitudeView(volume: $volume)
             }
             NodeOutputView(conductor.osc)
         }
@@ -87,7 +128,9 @@ struct DynamicOscillatorView: View {
         }
         .onReceive(watchConnector.$receivedMessage) { receivedMessage in
             if let message = receivedMessage,
-               let normalizedFrequency = message["frequency"] as? Double {
+               let normalizedFrequency = message["frequency"] as? Double,
+               let timestamp = message["timestamp"] as? Double {
+//                print("Gyroscope Latency: \(Date().timeIntervalSince1970-timestamp)") // uncomment for gyroscope data latency
                 self.normalizedFrequency = max(min(normalizedFrequency, 1), -1)
                 let frequencyRange = maxFrequency - minFrequency
                 self.frequency = minFrequency + (normalizedFrequency + 1) * (frequencyRange / 2.0)

@@ -1,8 +1,8 @@
 //
 //  WatchToiOSConnector.swift
-//  mobileTheremin Watch App
+//  Theremin Watch App
 //
-//  Created by Elena Hertel on 5/10/24.
+//  Created by Elena Hertel on 5/21/24.
 //
 
 import Foundation
@@ -42,7 +42,8 @@ class WatchToiOSConnector: NSObject, WCSessionDelegate, ObservableObject {
         }
         
         if session.isReachable {
-            let message: [String: Double] = ["frequency": frequency]
+//            let message: [String: Double] = ["frequency": frequency]
+            let message: [String: Double] = ["frequency": frequency, "timestamp": Date().timeIntervalSince1970]
             session.sendMessage(message, replyHandler: nil)
         } else {
             print("iPhone is not reachable.")
